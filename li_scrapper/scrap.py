@@ -1,4 +1,5 @@
 from .modules.linked_in_scraper.linked_in_scraper import LinkedInScraper
+import json
 
 
 def main():
@@ -9,4 +10,9 @@ def main():
     scraper.init_driver()
     scraper.login()
 
-    print(scraper.parse_profile('https://www.linkedin.com/in/oussama-b-318a14138/'))
+    user_data = scraper.parse_profile(
+        'https://www.linkedin.com/in/oussama-b-318a14138/')
+
+    f = open('user_data.json', 'w')
+    f.write(json.dumps(user_data))
+    f.close()
