@@ -9,6 +9,7 @@ Sphinx = "*"
 beautifulsoup4 = "*"
 selenium = "*"
 requests = "*"
+python-dotenv = "*"
 
 [dev-packages]
 

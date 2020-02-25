@@ -67,11 +67,11 @@ class LinkedInScraper:
     def get_skills(self):
         skills = {}
 
-        skills_show_more_button = self.driver.find_elements_by_xpath(
+        skills_show_more_button = self.driver.find_elements_by_css_selector(
             SKILLS_SHOW_MORE_BUTTON_XPATH)
 
         while len(skills_show_more_button) <= 0:
-            skills_show_more_button = self.driver.find_elements_by_xpath(
+            skills_show_more_button = self.driver.find_elements_by_css_selector(
                 SKILLS_SHOW_MORE_BUTTON_XPATH)
 
         self.driver.execute_script(
@@ -207,12 +207,15 @@ class LinkedInScraper:
         for see_more_button in see_more_buttons:
             self.driver.execute_script('arguments[0].click()', see_more_button)
 
-        fullname = self.wait_for_element_by_xpath(FULLNAME_XPATH).text
-        title = self.wait_for_element_by_xpath(TITLE_XPATH).text
-        location = self.wait_for_element_by_xpath(LOCATION_XPATH).text
-        photo = self.wait_for_element_by_xpath(
+        fullname = self.driver.find_element_by_css_selector(
+            FULLNAME_XPATH).text
+        title = self.driver.find_element_by_css_selector(TITLE_XPATH).text
+        location = self.driver.find_element_by_css_selector(
+            LOCATION_XPATH).text
+        photo = self.driver.find_element_by_css_selector(
             PHOTO_XPATH).get_attribute('src')
-        description = self.wait_for_element_by_xpath(DESCRIPTION_XPATH).text
+        description = self.driver.find_element_by_css_selector(
+            DESCRIPTION_XPATH).text
 
         user_data['userProfile']['fullname'] = fullname
         user_data['userProfile']['title'] = title
