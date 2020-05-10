@@ -10,6 +10,5 @@ def main(cookie, profile_url):
 
     user_data = scraper.parse_profile(profile_url)
 
-    f = open('user_data.json', 'w')
-    f.write(json.dumps(user_data))
-    f.close()
+    with open('user_data.json', 'w') as file:
+        file.write(json.dumps(user_data))

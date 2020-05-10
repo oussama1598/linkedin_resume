@@ -1,12 +1,14 @@
-import requests
 import logging
-import time
-from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from time import sleep
 
-from .linked_in_constants import (LINKED_IN_URL, FULLNAME_XPATH, TITLE_XPATH, LOCATION_XPATH,
-                                  PHOTO_XPATH, DESCRIPTION_XPATH, SKILLS_SHOW_MORE_BUTTON_XPATH, SKILLS_LIST_XPATH, EDUCATIONS_SHOW_MORE_BUTTON_XPATH, EDUCATIONS_LIST_XPATH)
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+from .linked_in_constants import SKILLS_SHOW_MORE_BUTTON_XPATH
+
+LINKED_IN_URL = 'https://www.linkedin.com/'
 
 logging.basicConfig(level=logging.INFO)
 
@@ -49,20 +51,80 @@ class LinkedInScraper:
 
             self.driver.close()
 
-    def wait_for_element_by_xpath(self, element_xpath):
-        tries = 0
-        element = self.driver.find_elements_by_xpath(element_xpath)
+    def text_or_none(self, element):
+        if element:
+            return element.text
 
-        while len(element) <= 0:
-            element = self.driver.find_elements_by_xpath(element_xpath)
-            tries += 1
+        return ""
 
-            if tries > 2:
-                print(f'Can\'t find {element_xpath}')
+    def wait_for(self, css_selector):
+        try:
+            return WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, css_selector))
+            )
+        except:
+            return None
 
-                return None
+    def get_element(self, css_selector, parent=None):
+        elements = []
 
-        return element[0]
+        if parent:
+            elements = parent.find_elements_by_css_selector(css_selector)
+        else:
+            elements = self.driver.find_element_by_css_selector(css_selector)
+
+        if len(elements) > 0:
+            return elements[0]
+
+        return None
+
+    def get_user_data(self):
+        user_profile = {}
+
+        user_profile['fullname'] = self.text_or_none(
+            self.driver.find_element_by_css_selector('.pv-top-card--list > li'))
+        user_profile['title'] = self.text_or_none(self.driver.find_element_by_css_selector('.ph5.pb5 .mt1'))
+        user_profile['location'] = self.text_or_none(
+            self.driver.find_element_by_css_selector('.pv-top-card--list.pv-top-card--list-bullet.mt1 > li'))
+        user_profile['photo'] = self.driver.find_element_by_css_selector(
+            '.profile-photo-edit__preview.ember-view').get_attribute('src')
+        user_profile['about'] = self.text_or_none(
+            self.driver.find_element_by_css_selector('.pv-about__summary-text.mt4.t-14.ember-view'))
+
+        self.driver.find_element_by_css_selector("a[data-control-name='contact_see_more']").click()
+
+        linkedin_url_element = self.wait_for('.ci-vanity-url a')
+        linkedin_url = linkedin_url_element.get_attribute('href')
+
+        user_profile['linkedin_username'] = linkedin_url.split('/')[-1]
+        user_profile['linkedin_link'] = linkedin_url
+
+        email_element = self.wait_for('.ci-email a')
+        user_profile['email'] = self.text_or_none(email_element)
+
+        websites_element = self.wait_for('.ci-websites')
+        user_profile['websites'] = {}
+
+        for website in websites_element.find_elements_by_css_selector('li'):
+            website_link = website.find_element_by_css_selector('a').get_attribute('href')
+            website_type = self.text_or_none(website.find_element_by_css_selector('span')) \
+                .strip().replace('(', '').replace(')', '').lower()
+
+            user_profile['websites'][website_type] = website_link
+
+        numbers_element = self.wait_for('.ci-phone')
+        user_profile['numbers'] = {}
+
+        for phone in numbers_element.find_elements_by_css_selector('li'):
+            phone_number = self.text_or_none(phone.find_elements_by_css_selector('span')[0])
+            phone_type = self.text_or_none(phone.find_elements_by_css_selector('span')[1]) \
+                .strip().replace('(', '').replace(')', '').lower()
+
+            user_profile['numbers'][phone_type] = phone_number
+
+        self.driver.find_element_by_css_selector("button.artdeco-modal__dismiss").click()
+
+        return user_profile
 
     def get_skills(self):
         skills = {}
@@ -105,11 +167,11 @@ class LinkedInScraper:
             dates_el = education.find_elements_by_css_selector(
                 '.pv-entity__dates')
 
-            school_name = None
-            degree_name = None
-            field_of_study = None
-            start_date = None
-            end_date = None
+            school_name = ""
+            degree_name = ""
+            field_of_study = ""
+            start_date = ""
+            end_date = ""
 
             if len(school_name_el) > 0:
                 school_name = school_name_el[0].text
@@ -125,8 +187,8 @@ class LinkedInScraper:
             if len(dates_el) > 0:
                 dates = dates_el[0].find_elements_by_css_selector('time')
 
-                start_date = dates[0].text if len(dates) > 0 else None
-                end_date = dates[1].text if len(dates) > 1 else None
+                start_date = dates[0].text if len(dates) > 0 else ""
+                end_date = dates[1].text if len(dates) > 1 else ""
 
             educations.append({
                 "schoolName": school_name,
@@ -155,12 +217,12 @@ class LinkedInScraper:
             date_range_el = experience.find_elements_by_css_selector(
                 '.pv-entity__date-range span:nth-child(2)')
 
-            title = None
-            company = None
-            description = None
-            location = None
-            start_date = None
-            end_date = None
+            title = ""
+            company = ""
+            description = ""
+            location = ""
+            start_date = ""
+            end_date = ""
 
             if len(title_el) > 0:
                 title = title_el[0].text
@@ -177,8 +239,8 @@ class LinkedInScraper:
             if len(date_range_el) > 0:
                 dates = date_range_el[0].text.split('–')
 
-                start_date = dates[0] if len(dates) > 0 else None
-                end_date = dates[1] if len(dates) > 1 else None
+                start_date = dates[0] if len(dates) > 0 else ""
+                end_date = dates[1] if len(dates) > 1 else ""
 
             experiences.append({
                 "title": title,
@@ -191,12 +253,69 @@ class LinkedInScraper:
 
         return experiences
 
+    def get_projects(self):
+        projects = []
+
+        expand_button = self.wait_for('button[aria-controls="projects-expandable-content"]')
+
+        if not expand_button:
+            return []
+
+        self.driver.execute_script('arguments[0].click()', expand_button)
+
+        projects_list = self.driver.find_elements_by_css_selector(
+            '#projects-expandable-content ul > .ember-view')
+
+        for project in projects_list:
+            title = ""
+            description = ""
+            external_link = ""
+            start_date = ""
+            end_date = ""
+
+            title_el = self.get_element('.pv-accomplishment-entity__title', project)
+
+            if title_el:
+                self.driver.execute_script('arguments[0].remove()', title_el.find_element_by_css_selector('span'))
+                title = self.text_or_none(title_el)
+
+            description_el = self.get_element('.pv-accomplishment-entity__description', project)
+
+            if description_el:
+                self.driver.execute_script('arguments[0].remove()', description_el.find_element_by_css_selector('div'))
+                description = self.text_or_none(description_el)
+
+            external_link_el = self.get_element('.pv-accomplishment-entity__external-source', project)
+
+            if external_link_el:
+                external_link = external_link_el.get_attribute('href')
+
+            date_range_el = self.get_element('.pv-accomplishment-entity__date', project)
+
+            if date_range_el:
+                dates = self.text_or_none(date_range_el).split('–')
+
+                start_date = dates[0] if len(dates) > 0 else ""
+                end_date = dates[1] if len(dates) > 1 else ""
+
+            projects.append({
+                "title": title,
+                "description": description,
+                "external_link": external_link,
+                "start_date": start_date.strip(),
+                "end_data": end_date.strip()
+            })
+
+        return projects
+
     def parse_profile(self, profile_url):
-        user_data = {'userProfile': {}}
+        user_data = {}
 
         logging.info(f'Parsing {profile_url}')
 
         self.driver.get(profile_url)
+
+        user_data['user_profile'] = self.get_user_data()
 
         self.driver.execute_script(
             "window.scrollTo(0, document.body.scrollHeight);")
@@ -207,24 +326,9 @@ class LinkedInScraper:
         for see_more_button in see_more_buttons:
             self.driver.execute_script('arguments[0].click()', see_more_button)
 
-        fullname = self.driver.find_element_by_css_selector(
-            FULLNAME_XPATH).text
-        title = self.driver.find_element_by_css_selector(TITLE_XPATH).text
-        location = self.driver.find_element_by_css_selector(
-            LOCATION_XPATH).text
-        photo = self.driver.find_element_by_css_selector(
-            PHOTO_XPATH).get_attribute('src')
-        description = self.driver.find_element_by_css_selector(
-            DESCRIPTION_XPATH).text
-
-        user_data['userProfile']['fullname'] = fullname
-        user_data['userProfile']['title'] = title
-        user_data['userProfile']['location'] = location
-        user_data['userProfile']['photo'] = photo
-        user_data['userProfile']['description'] = description
-
         user_data["educations"] = self.get_educations()
         user_data["skills"] = self.get_skills()
         user_data["experiences"] = self.get_experiences()
+        user_data["projects"] = self.get_projects()
 
         return user_data

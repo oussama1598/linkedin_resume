@@ -1,0 +1,27 @@
+{
+  "user_profile.fullname": "LINKEDIN_NAME",
+  "user_profile.title": "LINKEDIN_TITLE",
+  "user_profile.location": "LINKEDIN_LOCATION",
+  "user_profile.email": "LINKEDIN_EMAIL",
+  "user_profile.about": "LINKEDIN_ABOUT",
+  "user_profile.linkedin_username": "LINKEDIN_USERNAME",
+  "user_profile.linkedin_link": "LINKEDIN_URL",
+  "user_profile.numbers.mobile": "LINKEDIN_MOBILE_NUMBER",
+  "user_profile.websites.github": "LINKEDIN_GITHUB",
+  "educations": {
+    "template": "EDUCATIONS_TEMPLATE",
+    "schoolName": "LINKEDIN-SCHOOL-NAME",
+    "degreeName": "LINKEDIN-SCHOOL-DEGREE-NAME",
+    "fieldOfStudy": "LINKEDIN-SCHOOL-FIELD-OF-STUDY",
+    "startDate": "LINKEDIN-SCHOOL-START-DATE",
+    "endDate": "LINKEDIN-SCHOOL-END-DATE"
+  },
+  "projects": {
+    "template": "PROJECTS_TEMPLATE",
+    "title": "PROJECT-TITLE",
+    "description": "PROJECT-DESCRIPTION",
+    "external_link": "PROJECT-LINK",
+    "start_date": "PROJECT-START-DATE",
+    "end_data": "PROJECT-END-DATE"
+  }
+}
