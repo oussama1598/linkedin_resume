@@ -10,8 +10,6 @@ beautifulsoup4 = "*"
 selenium = "*"
 requests = "*"
 python-dotenv = "*"
+argparse = "*"
 
 [dev-packages]
-
-[requires]
-python_version = "3.7"

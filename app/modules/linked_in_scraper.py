@@ -1,14 +1,12 @@
 import logging
-from time import sleep
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from .linked_in_constants import SKILLS_SHOW_MORE_BUTTON_XPATH
-
 LINKED_IN_URL = 'https://www.linkedin.com/'
+SKILLS_SHOW_MORE_BUTTON_XPATH = '.pv-profile-section__card-action-bar.pv-skills-section__additional-skills.artdeco-container-card-action-bar.artdeco-button.artdeco-button--tertiary.artdeco-button--3.artdeco-button--fluid'
 
 logging.basicConfig(level=logging.INFO)
 
@@ -71,7 +69,7 @@ class LinkedInScraper:
         if parent:
             elements = parent.find_elements_by_css_selector(css_selector)
         else:
-            elements = self.driver.find_element_by_css_selector(css_selector)
+            elements = self.driver.find_elements_by_css_selector(css_selector)
 
         if len(elements) > 0:
             return elements[0]
@@ -84,10 +82,15 @@ class LinkedInScraper:
         user_profile['fullname'] = self.text_or_none(
             self.driver.find_element_by_css_selector('.pv-top-card--list > li'))
         user_profile['title'] = self.text_or_none(self.driver.find_element_by_css_selector('.ph5.pb5 .mt1'))
-        user_profile['location'] = self.text_or_none(
-            self.driver.find_element_by_css_selector('.pv-top-card--list.pv-top-card--list-bullet.mt1 > li'))
         user_profile['photo'] = self.driver.find_element_by_css_selector(
             '.profile-photo-edit__preview.ember-view').get_attribute('src')
+
+        about_show_more = self.driver.find_element_by_css_selector('#line-clamp-show-more-button')
+
+        if about_show_more:
+            self.driver.execute_script(
+                'arguments[0].click()', about_show_more)
+
         user_profile['about'] = self.text_or_none(
             self.driver.find_element_by_css_selector('.pv-about__summary-text.mt4.t-14.ember-view'))
 
@@ -99,10 +102,13 @@ class LinkedInScraper:
         user_profile['linkedin_username'] = linkedin_url.split('/')[-1]
         user_profile['linkedin_link'] = linkedin_url
 
-        email_element = self.wait_for('.ci-email a')
+        email_element = self.get_element('.ci-email a')
         user_profile['email'] = self.text_or_none(email_element)
 
-        websites_element = self.wait_for('.ci-websites')
+        location_element = self.get_element('.ci-address a')
+        user_profile['location'] = self.text_or_none(location_element)
+
+        websites_element = self.get_element('.ci-websites')
         user_profile['websites'] = {}
 
         for website in websites_element.find_elements_by_css_selector('li'):
@@ -112,7 +118,7 @@ class LinkedInScraper:
 
             user_profile['websites'][website_type] = website_link
 
-        numbers_element = self.wait_for('.ci-phone')
+        numbers_element = self.get_element('.ci-phone')
         user_profile['numbers'] = {}
 
         for phone in numbers_element.find_elements_by_css_selector('li'):
@@ -127,7 +133,7 @@ class LinkedInScraper:
         return user_profile
 
     def get_skills(self):
-        skills = {}
+        skills = []
 
         skills_show_more_button = self.driver.find_elements_by_css_selector(
             SKILLS_SHOW_MORE_BUTTON_XPATH)
@@ -139,6 +145,16 @@ class LinkedInScraper:
         self.driver.execute_script(
             'arguments[0].click()', skills_show_more_button[0])
 
+        top_skills_list = self.driver.find_elements_by_css_selector(
+            '.pv-skill-category-entity__top-skill .pv-skill-category-entity__name')
+
+        skills.append({
+            "type": "Top Skills",
+            "skills": [
+                el.text for el in
+                top_skills_list]
+        })
+
         skills_list = self.driver.find_elements_by_css_selector(
             '.pv-skill-category-list.pv-profile-section__section-info')
 
@@ -146,8 +162,12 @@ class LinkedInScraper:
             skill_title = skills_category.find_element_by_css_selector(
                 '.pv-skill-categories-section__secondary-skill-heading').text
 
-            skills[skill_title] = [
-                el.text for el in skills_category.find_elements_by_class_name('pv-skill-category-entity__name-text')]
+            skills.append({
+                "type": skill_title,
+                "skills": [
+                    el.text for el in
+                    skills_category.find_elements_by_class_name('pv-skill-category-entity__name-text')]
+            })
 
         return skills
 
@@ -263,6 +283,12 @@ class LinkedInScraper:
 
         self.driver.execute_script('arguments[0].click()', expand_button)
 
+        show_more_button = self.get_element(
+            '#projects-expandable-content .pv-profile-section__see-more-inline')
+
+        if show_more_button:
+            self.driver.execute_script('arguments[0].click()', show_more_button)
+
         projects_list = self.driver.find_elements_by_css_selector(
             '#projects-expandable-content ul > .ember-view')
 
@@ -300,7 +326,7 @@ class LinkedInScraper:
 
             projects.append({
                 "title": title,
-                "description": description,
+                "description": list(map(lambda x: {"bullet": x}, description.split('\n'))),
                 "external_link": external_link,
                 "start_date": start_date.strip(),
                 "end_data": end_date.strip()

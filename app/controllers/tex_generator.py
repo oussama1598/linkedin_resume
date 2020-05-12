@@ -35,8 +35,37 @@ def load_tex_template(tex_file_path):
         return file.read()
 
 
+def escape(value):
+    return value.translate(str.maketrans({
+        '&': r'\&'
+    }))
+
+
+def check_for_conditions_for_macro(template, key, value):
+    macros = [
+        [
+            'MINUS',
+            lambda x: (x and '-') or ''
+        ],
+        [
+            'LAST_SLASH',
+            lambda x: x.split('/')[-1]
+        ]
+    ]
+
+    for macro in macros:
+        template = template.replace(f'{macro[0]}({key})', macro[1](value))
+
+    return template
+
+
 def parse_str(template, key, value):
-    return template.replace(key, value)
+    if type(value) is list:
+        return template.replace(key, escape(', '.join(value)))
+
+    template = check_for_conditions_for_macro(template, key, value)
+
+    return template.replace(key, escape(value))
 
 
 def parse_list(tex_template, key, elements_list):
@@ -54,14 +83,18 @@ def parse_list(tex_template, key, elements_list):
         template = re.sub(rf'{template_name}|END_{template_name}', '', template_placeholder).strip()
 
         for template_key in key:
-            if template_key == 'template':
+            if template_key == 'template' or template_key == 'join':
                 continue
 
-            template = parse_str(template, key[template_key], element[template_key])
+            if type(key[template_key]) is str:
+                template = parse_str(template, key[template_key], element[template_key])
+
+            if type(key[template_key]) is dict:
+                template = parse_list(template, key[template_key], element[template_key])
 
         templates.append(template)
 
-    tempaltes_str = '\n\n'.join(templates)
+    tempaltes_str = key['join'].join(templates)
 
     return tex_template[:template_match.start()] + tempaltes_str + tex_template[template_match.start():]
 
@@ -112,7 +145,9 @@ def generate_tex_file_from_data(json_file_path, output_pdf, template_name):
 
     # generate the pdf file
     command = f'xelatex -interaction=nonstopmode {template_tex_file}'
-    sp.call(command, shell=True, cwd=temp_folder)
+    FNULL = open(os.devnull, 'w')
+
+    sp.call(command, shell=True, cwd=temp_folder, stdout=FNULL)
 
     # copy the pdf to the desired output
     shutil.copy2(template_tex_file.replace(".tex", ".pdf"), output_pdf)

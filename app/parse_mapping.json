@@ -10,6 +10,7 @@
   "user_profile.websites.github": "LINKEDIN_GITHUB",
   "educations": {
     "template": "EDUCATIONS_TEMPLATE",
+    "join": "\n\n",
     "schoolName": "LINKEDIN-SCHOOL-NAME",
     "degreeName": "LINKEDIN-SCHOOL-DEGREE-NAME",
     "fieldOfStudy": "LINKEDIN-SCHOOL-FIELD-OF-STUDY",
@@ -18,10 +19,21 @@
   },
   "projects": {
     "template": "PROJECTS_TEMPLATE",
+    "join": "\n\n",
     "title": "PROJECT-TITLE",
-    "description": "PROJECT-DESCRIPTION",
+    "description": {
+      "template": "PROJECT_DESCRIPTION_TEMPLATE",
+      "join": "\n",
+      "bullet": "DESCRIPTION_BULLET"
+    },
     "external_link": "PROJECT-LINK",
     "start_date": "PROJECT-START-DATE",
     "end_data": "PROJECT-END-DATE"
+  },
+  "skills": {
+    "template": "SKILLS_TEMPLATE",
+    "join": "\n\n",
+    "type": "SKILL-TYPE",
+    "skills": "SKILLS"
   }
 }

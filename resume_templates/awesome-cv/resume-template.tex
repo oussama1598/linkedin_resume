@@ -18,7 +18,7 @@
 % CONFIGURATIONS
 %-------------------------------------------------------------------------------
 % A4 paper size by default, use 'letterpaper' for US letter
-\documentclass[11pt, a4paper]{awesome-cv}
+\documentclass[10pt, a4paper]{awesome-cv}
 
 % Configure page margins with geometry
 \geometry{left=1.4cm, top=.8cm, right=1.4cm, bottom=1.8cm, footskip=.5cm}
@@ -59,8 +59,8 @@
 
 \mobile{LINKEDIN_MOBILE_NUMBER}
 \email{LINKEDIN_EMAIL}
-\homepage{www.posquit0.com}
-\github{LINKEDIN_GITHUB}
+%\homepage{www.posquit0.com}
+\github{LAST_SLASH(LINKEDIN_GITHUB)}
 \linkedin{LINKEDIN_USERNAME}
 % \gitlab{gitlab-id}
 % \stackoverflow{SO-id}{SO-name}
@@ -96,13 +96,27 @@
         LINKEDIN_ABOUT
     \end{cvparagraph}
 
+    \cvsection{Skills}
+
+    SKILLS_TEMPLATE
+    \begin{cvhonors}
+
+        \cvhonor
+        {SKILL-TYPE} % Award
+        {SKILLS} % Event
+        {} % Location
+        {} % Date(s)
+
+    \end{cvhonors}
+    END_SKILLS_TEMPLATE
+
     \cvsection{Education}
     \begin{cventries}
 
         EDUCATIONS_TEMPLATE
         \cventry
         {LINKEDIN-SCHOOL-NAME}
-        {LINKEDIN-SCHOOL-FIELD-OF-STUDY - LINKEDIN-SCHOOL-DEGREE-NAME}
+        {LINKEDIN-SCHOOL-FIELD-OF-STUDY MINUS(LINKEDIN-SCHOOL-DEGREE-NAME) LINKEDIN-SCHOOL-DEGREE-NAME}
         {} % Location
         {LINKEDIN-SCHOOL-START-DATE - LINKEDIN-SCHOOL-END-DATE} % Date(s)
         {
@@ -113,19 +127,21 @@
 
     \end{cventries}
 
-    \cvsection{Projects}
+    \cvsection{Personal Projects}
     \begin{cventries}
 
 
         PROJECTS_TEMPLATE
         \cventry
-        {PROJECT-START-DATE - PROJECT-END-DATE}
+        {PROJECT-START-DATE MINUS(PROJECT-END-DATE) PROJECT-END-DATE}
         {PROJECT-TITLE} % title
         {\href{PROJECT-LINK}{View Project}} % link
         {}
         {
             \begin{cvitems} % Description(s) of tasks/responsibilities
-                \item {PROJECT-DESCRIPTION}
+                PROJECT_DESCRIPTION_TEMPLATE
+                \item {DESCRIPTION_BULLET}
+                END_PROJECT_DESCRIPTION_TEMPLATE
             \end{cvitems}
         }
         END_PROJECTS_TEMPLATE

@@ -1,7 +1,0 @@
-{
-    "restructuredtext.confPath": "${workspaceFolder}/docs",
-    "python.pythonPath": "/bin/python3",
-    "cSpell.words": [
-        "linkedin"
-    ]
-}
