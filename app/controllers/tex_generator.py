@@ -37,7 +37,8 @@ def load_tex_template(tex_file_path):
 
 def escape(value):
     return value.translate(str.maketrans({
-        '&': r'\&'
+        '&': r'\&',
+        '_': r'\_'
     }))
 
 
